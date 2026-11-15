@@ -292,11 +292,20 @@ html[data-theme="dark"]{--syn-kw:#F2793A;--syn-str:#6CC5A0;--syn-num:#E0B45C;--s
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .rail .avatar{background-position:center;background-size:cover;cursor:pointer}
 /* ligar nós do organograma */
-.link-h{position:absolute;top:-8px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line-strong);cursor:crosshair;opacity:0;transition:opacity .15s}
+.link-h{position:absolute;left:50%;margin-left:-9px;width:18px;height:18px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line-strong);cursor:crosshair;opacity:0;transition:opacity .15s,transform .15s;z-index:2}
+.link-h::after{content:"";position:absolute;inset:-12px}
+.link-h.up{top:-10px}.link-h.down{bottom:-10px}
+.link-h:hover{transform:scale(1.25)}
+.canvas.linking .link-h{opacity:0}
+.canvas.linking .node.target .link-h{opacity:0}
+@media (pointer:coarse){.link-h{opacity:.9;width:22px;height:22px;margin-left:-11px}.link-h.up{top:-12px}.link-h.down{bottom:-12px}}
 .node:hover .link-h{opacity:1}
 .link-h:hover{background:var(--orange);border-color:var(--orange)}
 .edges path.tmp{stroke:var(--orange);opacity:1;stroke-dasharray:4 5}
-.node.target{outline:2px dashed var(--orange);outline-offset:3px}
+.node.target{outline:2px dashed var(--orange);outline-offset:4px}
+.world.reflow .node{transition:left .4s ease,top .4s ease}
+.world.reflow .edges{opacity:0;transition:opacity .2s}
+.node.target::after{content:"Solte para ligar";position:absolute;left:50%;top:-34px;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
 @media (max-width:760px){.chat-title{max-width:calc(100vw - 170px)}.fgrid{grid-template-columns:1fr}.run-row{grid-template-columns:60px 1fr 100px}.run-row > :nth-child(n+4){display:none}.dialog{padding:20px}}
 .menu{max-height:72vh;overflow:auto}
 .menu .sep,.pop .sep{display:block}
@@ -1068,15 +1077,20 @@ function codeHtml(name,code){const n=code.replace(/\n$/,'').split('\n').length,g
   return '<div class="code"><div class="gut">'+gut+'</div><pre><code>'+h+'</code></pre></div>'}
 /* ---------- organograma: ligar um cartão a outro ---------- */
 const isUnder=(id,anc)=>{let c=nodes.find(z=>z.id===id);while(c){if(c.parent===anc)return true;c=nodes.find(z=>z.id===c.parent)}return false};
+let linkDir='up';
 function linkMove(e,id){const c=$('#canvas').getBoundingClientRect(),n=nodes.find(z=>z.id===id),el=$('.node[data-id="'+id+'"]');
-  const x1=n.x+el.offsetWidth/2,y1=n.y,x2=(e.clientX-c.left-view.x)/view.k,y2=(e.clientY-c.top-view.y)/view.k;
+  const x1=n.x+el.offsetWidth/2,y1=linkDir==='up'?n.y:n.y+el.offsetHeight,x2=(e.clientX-c.left-view.x)/view.k,y2=(e.clientY-c.top-view.y)/view.k,my=(y1+y2)/2;
   let pth=$('#edges .tmp');if(!pth){pth=document.createElementNS('http://www.w3.org/2000/svg','path');pth.setAttribute('class','tmp');$('#edges').appendChild(pth)}
-  pth.setAttribute('d','M'+x1+','+y1+' L'+x2+','+y2);
+  pth.setAttribute('d','M'+x1+','+y1+' C'+x1+','+my+' '+x2+','+my+' '+x2+','+y2);
   $$('.node.target').forEach(z=>z.classList.remove('target'));const tg=linkTarget(e,id);if(tg)$('.node[data-id="'+tg+'"]').classList.add('target')}
-function linkTarget(e,id){const el=document.elementFromPoint(e.clientX,e.clientY),nd=el&&el.closest('.node');if(!nd)return null;const t=nd.dataset.id;return(t===id||isUnder(t,id))?null:t}
-function linkEnd(e,id){const tg=linkTarget(e,id),n=nodes.find(z=>z.id===id);
-  if(tg&&tg!==n.parent){n.parent=tg;const pn=nodes.find(z=>z.id===tg);toast(n.name+' agora responde a '+(pn.kind==='org'?'OpenFlows':pn.name))}
-  renderNodes();if(sel)openSheet(sel)}
+function linkTarget(e,id){const el=document.elementFromPoint(e.clientX,e.clientY),nd=el&&el.closest('.node');if(!nd)return null;const t=nd.dataset.id;if(t===id)return null;
+  if(linkDir==='up')return isUnder(t,id)?null:t;
+  return(t==='of'||isUnder(id,t))?null:t}
+function linkEnd(e,id){const tg=linkTarget(e,id),n=nodes.find(z=>z.id===id);$$('.node.target').forEach(z=>z.classList.remove('target'));
+  if(tg){const tn=nodes.find(z=>z.id===tg),nm=x=>x.kind==='org'?'OpenFlows':x.name;
+    if(linkDir==='up'&&tg!==n.parent){n.parent=tg;toast(n.name+' agora responde a '+nm(tn))}
+    if(linkDir==='down'&&tn.parent!==id){tn.parent=id;toast(tn.name+' agora responde a '+nm(n))}}
+  if(tg){layout();const w=$('#world');w.classList.add('reflow');void w.offsetWidth;nodes.forEach(z=>{const el=$('.node[data-id="'+z.id+'"]');if(el){el.style.left=z.x+'px';el.style.top=z.y+'px'}});setTimeout(()=>{w.classList.remove('reflow');renderNodes()},430)}else renderNodes();if(sel)openSheet(sel)}
 
 /* ---------- organograma ---------- */
 const statusTxt={run:'Operando',wait:'Espera alguém',err:'Com erro',idle:'Disponível',off:''};
@@ -1106,10 +1120,10 @@ function layout(){ // árvore simples: largura proporcional às folhas
 }
 function nodeHtml(n){
   const face=n.kind==='human'?n.name.slice(0,2).toUpperCase():n.kind==='org'?'':symSvg;
-  if(n.kind==='org') return `<div class="lockup"><svg role="img" aria-label="OpenFlows"><use href="#logo-h-white"/></svg></div>`;
+  if(n.kind==='org') return `<div class="lockup"><svg role="img" aria-label="OpenFlows"><use href="#logo-h-white"/></svg></div><span class="link-h down" data-dir="down" title="Arraste até quem vai responder direto à OpenFlows"></span>`;
   return `<span class="face" style="--area:var(--area-${n.area})">${face}${n.kind==='agent'?`<span class="st dot ${n.status}" style="animation:${n.status==='run'?'':'none'}"></span>`:''}</span>
     <div class="n">${esc(n.name)}${n.kind==='human'?'<span class="tag">Pessoa</span>':''}</div><div class="r">${fmt(n.role)}</div>
-    ${n.kind==='agent'&&n.status!=='idle'?`<div class="task"><i class="dot ${n.status}"></i>${esc(n.task||statusTxt[n.status])}</div>`:''}<span class="link-h" title="Arraste até quem será o responsável"></span>`;
+    ${n.kind==='agent'&&n.status!=='idle'?`<div class="task"><i class="dot ${n.status}"></i>${esc(n.task||statusTxt[n.status])}</div>`:''}${n.kind!=='org'?'<span class="link-h up" data-dir="up" title="Arraste até quem será o responsável"></span>':''}<span class="link-h down" data-dir="down" title="Arraste até quem vai responder a este cartão"></span>`;
 }
 function renderNodes(){
   const w=$('#world'); w.querySelectorAll('.node').forEach(e=>e.remove());
@@ -1167,7 +1181,7 @@ function openSheet(id,mode){
   const c=$('#canvas'); let mode=null,sx,sy,ox,oy,nid,moved; const pts=new Map(); let pinch=null;
   const pinchState=()=>{const [a,b]=[...pts.values()],r=c.getBoundingClientRect();return{d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2-r.left,my:(a.y+b.y)/2-r.top}};
   c.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){if(mode==='node'){const n=nodes.find(z=>z.id===nid);n.x=ox;n.y=oy;renderNodes()}$$('#edges .tmp').forEach(x=>x.remove());mode='pinch';moved=true;const st=pinchState();pinch={d:st.d,k:view.k,mx:st.mx,my:st.my,vx:view.x,vy:view.y};c.setPointerCapture(e.pointerId);return}if(pts.size>2)return;const nd=e.target.closest('.node');sx=e.clientX;sy=e.clientY;moved=false;
-    if(nd&&e.target.closest('.link-h')){mode='link';nid=nd.dataset.id}else if(nd){mode='node';nid=nd.dataset.id;const n=nodes.find(z=>z.id===nid);ox=n.x;oy=n.y}else{mode='pan';ox=view.x;oy=view.y;c.classList.add('panning')}
+    if(nd&&e.target.closest('.link-h')){mode='link';nid=nd.dataset.id;linkDir=e.target.closest('.link-h').dataset.dir;c.classList.add('linking')}else if(nd){mode='node';nid=nd.dataset.id;const n=nodes.find(z=>z.id===nid);ox=n.x;oy=n.y}else{mode='pan';ox=view.x;oy=view.y;c.classList.add('panning')}
     c.setPointerCapture(e.pointerId)});
   c.addEventListener('pointermove',e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(mode==='pinch'){if(pts.size<2)return;const st=pinchState(),k=Math.min(2,Math.max(.3,pinch.k*st.d/pinch.d));view.k=k;view.x=st.mx-(pinch.mx-pinch.vx)*(k/pinch.k);view.y=st.my-(pinch.my-pinch.vy)*(k/pinch.k);applyView();return}if(!mode)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
     if(mode==='pan'){view.x=ox+dx;view.y=oy+dy;applyView()}
@@ -1175,7 +1189,7 @@ function openSheet(id,mode){
     else{const n=nodes.find(z=>z.id===nid);n.x=ox+dx/view.k;n.y=oy+dy/view.k;const el=$(`.node[data-id="${nid}"]`);el.style.left=n.x+'px';el.style.top=n.y+'px';drawEdges()}});
   const endPt=e=>{pts.delete(e.pointerId);if(mode==='pinch'){if(pts.size===0){mode=null;c.classList.remove('panning')}return true}return false};
   c.addEventListener('pointercancel',e=>{endPt(e);if(!pts.size){mode=null;c.classList.remove('panning')}});
-  c.addEventListener('pointerup',e=>{if(endPt(e))return;if(mode==='link')linkEnd(e,nid);if(mode==='node'&&!moved&&nid!=='of')openSheet(nid);if(mode==='pan'&&!moved){$('#sheet').classList.remove('on');sel=null;renderNodes()}mode=null;c.classList.remove('panning')});
+  c.addEventListener('pointerup',e=>{if(endPt(e))return;if(mode==='link'){linkEnd(e,nid);c.classList.remove('linking')}if(mode==='node'&&!moved&&nid!=='of')openSheet(nid);if(mode==='pan'&&!moved){$('#sheet').classList.remove('on');sel=null;renderNodes()}mode=null;c.classList.remove('panning')});
   c.addEventListener('wheel',e=>{e.preventDefault();const r=c.getBoundingClientRect();zoomAt(view.k*(e.deltaY<0?1.1:.9),e.clientX-r.left,e.clientY-r.top)},{passive:false});
 })();
 
