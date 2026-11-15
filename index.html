@@ -382,6 +382,7 @@ html{--area-eng:var(--area-mkt);--area-gov:var(--area-com)}
 .canvas{position:absolute;inset:0;overflow:hidden;cursor:grab;
   background-color:var(--bg);background-image:radial-gradient(var(--grid-dot) 1.2px,transparent 1.2px);background-size:24px 24px}
 .canvas.panning{cursor:grabbing}
+.canvas{touch-action:none;-webkit-user-select:none;user-select:none}
 .world{position:absolute;left:0;top:0;transform-origin:0 0}
 .edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .edges path{fill:none;stroke:var(--line-strong);stroke-width:1.5;opacity:.55}
@@ -1163,15 +1164,18 @@ function openSheet(id,mode){
 }
 /* pan, zoom e arrastar nós */
 (function(){
-  const c=$('#canvas'); let mode=null,sx,sy,ox,oy,nid,moved;
-  c.addEventListener('pointerdown',e=>{const nd=e.target.closest('.node');sx=e.clientX;sy=e.clientY;moved=false;
+  const c=$('#canvas'); let mode=null,sx,sy,ox,oy,nid,moved; const pts=new Map(); let pinch=null;
+  const pinchState=()=>{const [a,b]=[...pts.values()],r=c.getBoundingClientRect();return{d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2-r.left,my:(a.y+b.y)/2-r.top}};
+  c.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){if(mode==='node'){const n=nodes.find(z=>z.id===nid);n.x=ox;n.y=oy;renderNodes()}$$('#edges .tmp').forEach(x=>x.remove());mode='pinch';moved=true;const st=pinchState();pinch={d:st.d,k:view.k,mx:st.mx,my:st.my,vx:view.x,vy:view.y};c.setPointerCapture(e.pointerId);return}if(pts.size>2)return;const nd=e.target.closest('.node');sx=e.clientX;sy=e.clientY;moved=false;
     if(nd&&e.target.closest('.link-h')){mode='link';nid=nd.dataset.id}else if(nd){mode='node';nid=nd.dataset.id;const n=nodes.find(z=>z.id===nid);ox=n.x;oy=n.y}else{mode='pan';ox=view.x;oy=view.y;c.classList.add('panning')}
     c.setPointerCapture(e.pointerId)});
-  c.addEventListener('pointermove',e=>{if(!mode)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+  c.addEventListener('pointermove',e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(mode==='pinch'){if(pts.size<2)return;const st=pinchState(),k=Math.min(2,Math.max(.3,pinch.k*st.d/pinch.d));view.k=k;view.x=st.mx-(pinch.mx-pinch.vx)*(k/pinch.k);view.y=st.my-(pinch.my-pinch.vy)*(k/pinch.k);applyView();return}if(!mode)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
     if(mode==='pan'){view.x=ox+dx;view.y=oy+dy;applyView()}
     else if(mode==='link'){linkMove(e,nid)}
     else{const n=nodes.find(z=>z.id===nid);n.x=ox+dx/view.k;n.y=oy+dy/view.k;const el=$(`.node[data-id="${nid}"]`);el.style.left=n.x+'px';el.style.top=n.y+'px';drawEdges()}});
-  c.addEventListener('pointerup',e=>{if(mode==='link')linkEnd(e,nid);if(mode==='node'&&!moved&&nid!=='of')openSheet(nid);if(mode==='pan'&&!moved){$('#sheet').classList.remove('on');sel=null;renderNodes()}mode=null;c.classList.remove('panning')});
+  const endPt=e=>{pts.delete(e.pointerId);if(mode==='pinch'){if(pts.size===0){mode=null;c.classList.remove('panning')}return true}return false};
+  c.addEventListener('pointercancel',e=>{endPt(e);if(!pts.size){mode=null;c.classList.remove('panning')}});
+  c.addEventListener('pointerup',e=>{if(endPt(e))return;if(mode==='link')linkEnd(e,nid);if(mode==='node'&&!moved&&nid!=='of')openSheet(nid);if(mode==='pan'&&!moved){$('#sheet').classList.remove('on');sel=null;renderNodes()}mode=null;c.classList.remove('panning')});
   c.addEventListener('wheel',e=>{e.preventDefault();const r=c.getBoundingClientRect();zoomAt(view.k*(e.deltaY<0?1.1:.9),e.clientX-r.left,e.clientY-r.top)},{passive:false});
 })();
 
