@@ -223,7 +223,15 @@ main{position:relative;overflow:hidden;background:var(--bg)}
 .agent-call .drill p{margin-top:2px;color:var(--text-2)}
 [hidden]{display:none!important}
 .live{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-2)}
-.live .spin{display:inline-block;color:var(--orange);font-size:16px;animation:spin 1.4s linear infinite}
+.live .flowmark{width:22px;height:22px;flex:none;animation:breathe 1.8s ease-in-out infinite}
+.live .flowmark .ink{fill:var(--logo-ink)}
+@keyframes breathe{50%{transform:scale(.88);opacity:.85}}
+.shimmer{background:linear-gradient(100deg,var(--text-2) 0%,var(--text-2) 40%,var(--text) 50%,var(--text-2) 60%,var(--text-2) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shim 1.8s linear infinite}
+@keyframes shim{from{background-position:120% 0}to{background-position:-120% 0}}
+.live .meta{display:flex;align-items:center;font-size:13px}
+@media (prefers-reduced-motion:reduce){.live .flowmark,.shimmer{animation:none}.shimmer{color:var(--text-2)}}
+@media (pointer:fine){.live .hint-stop{display:none}}
+@media (pointer:fine){.live .meta::after{content:"· Esc para parar";margin-left:.45em}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .caret::after{content:"";display:inline-block;width:8px;height:16px;margin-left:2px;vertical-align:-2px;background:var(--orange);border-radius:2px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
@@ -498,6 +506,10 @@ h1{font-size:30px}
     <linearGradient id="flowLight" x1="331.62" y1="538.63" x2="748.38" y2="538.63" gradientUnits="userSpaceOnUse"><!-- derivado: mesmo gradiente, terminando em areia para não sumir no fundo claro -->
       <stop offset="0" stop-color="#e84f03"/><stop offset=".3" stop-color="#ec8a52"/><stop offset=".65" stop-color="#e9bfa3"/><stop offset="1" stop-color="#d8d6c9"/>
     </linearGradient>
+    <linearGradient id="flowAnim" x1="0" y1="0" x2="1" y2="0" spreadMethod="reflect">
+      <stop offset="0" stop-color="#e84f03"/><stop offset=".45" stop-color="#ec9d75"/><stop offset="1" stop-color="#f2e6de"/>
+      <animateTransform attributeName="gradientTransform" type="translate" values="-1 0;1 0" dur="1.6s" repeatCount="indefinite"/>
+    </linearGradient>
     <symbol id="sym" viewBox="320 300 450 480">
       <path style="fill:var(--logo-ink)" d="M528.1,421.61c27.19,70.5,98.53,113.3,173.52,103.68l51.61-6.24.05-70.92-58.17,7.02c-41.13,6.19-80.63-14.57-98.54-52.21l-47.93-103.74h-68.48L528.1,421.61Z"/>
       <path style="fill:var(--logo-ink)" d="M561.7,658.39c-27.19-70.5-98.53-113.3-173.53-103.68l-51.61,6.24-.05,70.92,58.17-7.02c41.13-6.19,80.63,14.57,98.54,52.21l47.94,103.74h68.48L561.7,658.39Z"/>
@@ -592,7 +604,7 @@ h1{font-size:30px}
               <div class="composer">
                 <div class="strip" id="designStrip" hidden><i class="dot run"></i>Design ativo<span class="sep">·</span>conectado ao Claude Design</div>
                 <div class="strip" id="recStrip" hidden><span class="wave"><i></i><i></i><i></i><i></i><i></i></span>Gravando<span class="sep">·</span>a transcrição entra no campo quando você parar<button class="btn btn-secondary" id="recStop">Parar</button></div>
-                <textarea placeholder="Peça algo ao Cockpit. @ para citar arquivos e chats, / para comandos." aria-label="Mensagem" id="msgBox"></textarea>
+                <textarea placeholder="Peça algo ao Cockpit. @ para citar arquivos e chats, / para comandos." aria-label="Mensagem" id="msgBox" enterkeyhint="enter"></textarea>
                 <div class="bar">
                   <button class="icon-btn" id="plusBtn" data-menu-btn aria-label="Adicionar" title="Anexar arquivo ou ligar o Design"><i data-lucide="plus"></i></button>
                   <div class="modes" role="group" aria-label="Modo">
@@ -944,6 +956,7 @@ function onMsg(){
 }
 /* ---------- chat que responde (simulado) ---------- */
 let busy=false, stopReq=false, replyN=0;
+const touchUI=matchMedia('(pointer:coarse)').matches;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const nearBottom=()=>{const t=$('.thread');return t.scrollHeight-t.scrollTop-t.clientHeight<120};
 const toBottom=(force)=>{const t=$('.thread');if(force||nearBottom())t.scrollTop=t.scrollHeight};
@@ -963,10 +976,10 @@ async function sendMsg(){
   const u=document.createElement('div');u.className='msg-user';u.innerHTML='<div class="who"><span class="avatar sm">'+esc(ini)+'</span>'+esc(me2)+'<span class="sep">·</span>agora</div><div class="bubble" style="white-space:pre-wrap">'+esc(v)+'</div>';
   $('#thread').appendChild(u); b.value=''; grow(); onMsg(); toBottom(true);
   const r=replies[replyN++%replies.length](v); setBusy(true); stopReq=false;
-  const live=document.createElement('div');live.className='live';live.innerHTML='<span class="spin">✳</span><span class="verb">Pensando</span><span class="sep">·</span><span class="tok">0 tokens</span>';
+  const live=document.createElement('div');live.className='live';live.innerHTML='<svg class="flowmark" viewBox="320 300 450 480" aria-hidden="true"><path class="ink" d="M528.1,421.61c27.19,70.5,98.53,113.3,173.52,103.68l51.61-6.24.05-70.92-58.17,7.02c-41.13,6.19-80.63-14.57-98.54-52.21l-47.93-103.74h-68.48L528.1,421.61Z"/><path class="ink" d="M561.7,658.39c-27.19-70.5-98.53-113.3-173.53-103.68l-51.61,6.24-.05,70.92,58.17-7.02c41.13-6.19,80.63,14.57,98.54,52.21l47.94,103.74h68.48L561.7,658.39Z"/><path fill="url(#flowAnim)" d="M753.23,622.7l.05-75.45-76.28-.2c-39.84-1.54-76.87-14.6-108.65-39.33-47.71-35.92-104.68-54.27-164.09-53.1l-67.7.13-.05,75.17,78.63.19c40.7,1.31,78.68,14.8,110.97,40.31,47.52,35.32,103.99,53.31,162.87,52.15L753.23,622.7Z"/></svg><span class="verb shimmer">Pensando</span><span class="meta"><span class="sec">0s</span><span class="sep">·</span><span class="tok">0 tokens</span><span class="hint-stop"><span class="sep">·</span>toque no quadrado para parar</span></span>';
   $('#thread').appendChild(live); toBottom(true);
   const verbs=['Pensando','Lendo o projeto','Conferindo','Costurando a resposta'];let k=0,tok=0;
-  const tick=setInterval(()=>{tok+=37+Math.floor(Math.random()*60);live.querySelector('.tok').textContent=tok.toLocaleString('pt-BR')+' tokens';if(++k%6===0)live.querySelector('.verb').textContent=verbs[(k/6)%verbs.length]},200);
+  const t0=Date.now();const tick=setInterval(()=>{tok+=37+Math.floor(Math.random()*60);live.querySelector('.tok').textContent=tok.toLocaleString('pt-BR')+' tokens';live.querySelector('.sec').textContent=Math.floor((Date.now()-t0)/1000)+'s';if(++k%8===0)live.querySelector('.verb').textContent=verbs[(k/8)%verbs.length]},200);
   await sleep(1300);
   if(!stopReq){const tl=document.createElement('div');tl.className='tools';
     tl.innerHTML='<button onclick="this.parentElement.toggleAttribute(\'open\')"><i data-lucide="chevron-right" class="chev ic-sm"></i>Executou '+r.tools.length+(r.tools.length>1?' ações':' ação')+'</button><ol>'+r.tools.map(x=>'<li><b>'+x[0]+'</b><code>'+esc(x[1])+'</code></li>').join('')+'</ol>';
@@ -1247,7 +1260,7 @@ document.addEventListener('dragstart',e=>{const it=e.target.closest('.item[data-
 document.addEventListener('dragend',()=>{dragId=null;$$('.dragging,.drop').forEach(x=>x.classList.remove('dragging','drop'))});
 document.addEventListener('dragover',e=>{if(!dragId)return;const f=e.target.closest('.item.folder[data-id],[data-cwd]');$$('.drop').forEach(x=>x!==f&&x.classList.remove('drop'));if(f&&f.dataset.id!==dragId){e.preventDefault();f.classList.add('drop')}});
 document.addEventListener('drop',e=>{if(!dragId)return;const f=e.target.closest('.item.folder[data-id],[data-cwd]');if(!f)return;e.preventDefault();moveTo(dragId,f.dataset.id||f.dataset.cwd||null)});
-document.addEventListener('keydown',e=>{if(e.target.id==='msgBox'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!$('#hintMenu').classList.contains('on')){e.preventDefault();sendMsg();return}if(e.key==='Escape'&&busy){stopReq=true}if(e.target.id==='chatTitle'&&(e.key==='Enter'||e.key==='Escape')){e.preventDefault();e.target.blur()}if(e.key==='Escape'){closeMenus();closeModal();$('#cfgPop').classList.remove('on')}if(e.ctrlKey&&e.key==="'"&&$('#chat').classList.contains('on')){e.preventDefault();toggleTerminal()}});
+document.addEventListener('keydown',e=>{if(e.target.id==='msgBox'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!touchUI&&!$('#hintMenu').classList.contains('on')){e.preventDefault();sendMsg();return}if(e.key==='Escape'&&busy){stopReq=true}if(e.target.id==='chatTitle'&&(e.key==='Enter'||e.key==='Escape')){e.preventDefault();e.target.blur()}if(e.key==='Escape'){closeMenus();closeModal();$('#cfgPop').classList.remove('on')}if(e.ctrlKey&&e.key==="'"&&$('#chat').classList.contains('on')){e.preventDefault();toggleTerminal()}});
 addEventListener('resize',()=>{if($('#agentes').classList.contains('on'))fit()});
 
 /* nome do organograma (preferência local do protótipo) */
