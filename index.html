@@ -222,6 +222,14 @@ main{position:relative;overflow:hidden;background:var(--bg)}
 .agent-call[open] .drill{display:flex}
 .agent-call .drill p{margin-top:2px;color:var(--text-2)}
 [hidden]{display:none!important}
+.live{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-2)}
+.live .spin{display:inline-block;color:var(--orange);font-size:16px;animation:spin 1.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.caret::after{content:"";display:inline-block;width:8px;height:16px;margin-left:2px;vertical-align:-2px;background:var(--orange);border-radius:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.composer textarea{max-height:200px;overflow-y:auto}
+.send.stop{background:var(--text);color:var(--bg)}
+.msg-ai .stopped{font-size:13px;color:var(--text-2);font-style:italic}
 .chat-title{font-weight:600;padding:4px 8px;border-radius:8px;outline:0;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}
 .chat-title:hover,.chat-title:focus{background:var(--surface-2)}
 .chat-title:focus{text-overflow:clip}
@@ -867,7 +875,7 @@ function openChat(kind){
       <div class="tools"><button onclick="this.parentElement.toggleAttribute('open')"><i data-lucide="chevron-right" class="chev ic-sm"></i>Consultou 4 projetos e 2 planos</button><ol><li><b>Plano</b><code>OpenFlows/ITSM · 27%</code></li><li><b>Plano</b><code>OpenFlows/openflows-painel · 30%</code></li><li><b>Git</b><code>16 commits na semana</code></li><li><b>Chats</b><code>3 conversas esperando alguém</code></li></ol></div>
       <div class="msg-ai"><p>${n.id==='jose'?'Semana com bastante entrega, mas três coisas dependem de vocês para andar.':esc(n.task||'Estou disponível.')}</p>
       ${n.id==='jose'?`<h4>Precisa de decisão</h4><ul><li><b>ITSM:</b> o PR #7 espera merge, e o fiscal barrou a entrega por uma divergência de versão do GLPI.</li><li><b>openflows-painel:</b> 5 gates esperam o Rafael.</li><li><b>Tecmar:</b> testes da API do ERP esperam o Bruno.</li></ul><h4>Andando sozinho</h4><ul><li>BPO-Fiscal da Aurora: agente trabalhando desde 10:22.</li></ul>`:''}
-      <div class="foot"><span>09:03</span><button class="icon-btn" aria-label="Copiar"><i data-lucide="copy" class="ic-sm"></i></button></div></div>
+      <div class="foot"><span>09:03</span><button class="icon-btn" aria-label="Copiar" title="Copiar" data-copy><i data-lucide="copy" class="ic-sm"></i></button></div></div>
       ${n.id==='jose'?`<div class="pr"><div class="top"><i data-lucide="send" class="ic-sm"></i><b>Quer que eu cobre o Bruno sobre o ERP?</b></div><div class="d">Mando uma mensagem na conversa da Tecmar citando o que falta.</div><div class="row"><button class="btn btn-primary btn-sm">Pode cobrar</button><button class="btn btn-ghost btn-sm">Agora não</button></div></div>`:''}`;
     $('#chatHint').textContent=`${n.name} responde pelo organograma e pode acionar outros agentes da área.`;
   } else {
@@ -894,7 +902,7 @@ function openChat(kind){
       <div class="msg-ai"><p>Não caiu, mas estava barrando a navegação, e já resolvi: desde as 14:27 UTC o GLPI voltou ao normal. Dê um F5 na página.</p>
         <h4>O que aconteceu</h4><p>Foi um erro meu no PR #3. O limite de tentativas que coloquei para o login (10 por minuto) acabou valendo para o GLPI inteiro, então até o CSS e as fontes dos ícones eram barrados.</p>
         <h4>O que fiz</h4><ul><li>Tirei o limite e reiniciei o GLPI pelo Coolify às 14:26 UTC.</li><li>Conferi às 14:27: 25 pedidos seguidos sem nenhum bloqueio.</li><li>Abri o PR #7 com essa mudança, para o Git voltar a bater com o que está no ar.</li></ul>
-        <div class="foot"><span>11:28<span class="sep">·</span>opus-5-5</span><button class="icon-btn" aria-label="Copiar"><i data-lucide="copy" class="ic-sm"></i></button></div></div>
+        <div class="foot"><span>11:28<span class="sep">·</span>opus-5-5</span><button class="icon-btn" aria-label="Copiar" title="Copiar" data-copy><i data-lucide="copy" class="ic-sm"></i></button></div></div>
       <div class="notice"><i data-lucide="triangle-alert"></i><div><div class="t">Chris, Theo e Nat barraram a entrega</div><div class="d">O docker-compose usa glpi 11.0.12, mas o comparativo fixou 12.0.1. Alinhe a tag ou registre por que a decisão mudou.</div><div class="row"><button class="btn btn-secondary btn-sm">Corrigir e terminar</button><button class="btn btn-ghost btn-sm">Assumir a ressalva</button></div></div></div>
       <div class="pr"><div class="top"><i data-lucide="git-pull-request" class="ic-sm"></i><span class="chip wait">Espera seu merge</span><span class="diffstat"><span class="a">+2</span> <span class="r">−6</span><span class="sep">·</span>1 arquivo</span></div>
         <div class="t">PR #7<span class="sep">·</span>tira o limite de tentativas que derrubava o GLPI</div><div class="d">fix/glpi-remove-ratelimit → main</div>
@@ -933,6 +941,48 @@ function onMsg(){
     m.innerHTML='<div class="lbl">Comandos</div>'+l.map(c=>'<button data-ins="'+c[0]+' ">'+c[0]+'<small>'+c[1]+'</small></button>').join('');return showAbove(m,$('.composer'))}
   if(/@\S*$/.test(v)){m.innerHTML='<div class="lbl">Arquivo deste projeto</div><button data-at="@docker-compose.yml "><i data-lucide="file-code" class="ic-sm"></i>docker-compose.yml</button><button data-at="@README.md "><i data-lucide="file-text" class="ic-sm"></i>README.md</button><div class="sep"></div><div class="lbl">Chat de qualquer projeto</div><button data-at="@chat:Costumers/Aurora#12 "><i data-lucide="message-square" class="ic-sm"></i>Aurora<span class="sep">·</span>#12 Arruma os nomes da área do DP</button>';return showAbove(m,$('.composer'))}
   m.classList.remove('on');
+}
+/* ---------- chat que responde (simulado) ---------- */
+let busy=false, stopReq=false, replyN=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const nearBottom=()=>{const t=$('.thread');return t.scrollHeight-t.scrollTop-t.clientHeight<120};
+const toBottom=(force)=>{const t=$('.thread');if(force||nearBottom())t.scrollTop=t.scrollHeight};
+function grow(){const b=$('#msgBox');b.style.height='auto';b.style.height=Math.min(b.scrollHeight,200)+'px'}
+function setBusy(on){busy=on;const s=$('#sendBtn');s.classList.toggle('stop',on);s.setAttribute('aria-label',on?'Parar':'Enviar');s.title=on?'Parar (Esc)':'Enviar (Enter)';s.innerHTML='<i data-lucide="'+(on?'square':'arrow-up')+'"></i>';icons()}
+const replies=[
+ v=>({tools:[['Read','README.md'],['Bash','git status']],text:['Entendi o pedido. Antes de mexer em qualquer coisa, olhei o estado do projeto.','## O que eu vi','- O branch atual está limpo, sem mudanças pendentes.\n- O README descreve como subir o serviço pelo Docker.','## Próximo passo','Se você confirmar, eu crio um branch novo, faço a mudança e abro um PR para você revisar. Nada vai para main sem aprovação.']}),
+ v=>({tools:[['Grep','"limite" em docker-compose.yml'],['Read','docker-compose.yml'],['Edit','docker-compose.yml']],text:['Feito. Ajustei o docker-compose para o que você pediu.','## O que mudou','- Uma linha alterada em docker-compose.yml.\n- Nenhum outro arquivo foi tocado.','Quer que eu faça o commit e abra o PR agora?']}),
+ v=>({tools:[['Agentes','consultou quem está disponível']],agent:true,text:['Pedi ajuda ao Chris, da Auditoria, para revisar antes de seguir.','Ele aprovou com uma ressalva: vale escrever um teste que cubra esse caso. Eu escrevo o teste e te aviso quando estiver pronto.']}),
+];
+function mdLite(t){return esc(t).replace(/^## (.*)$/gm,'<h4>$1</h4>').replace(/^- (.*)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,m=>'<ul>'+m.replace(/\n/g,'')+'</ul>')}
+async function sendMsg(){
+  if(busy){stopReq=true;return}
+  const b=$('#msgBox'),v=b.value.trim(); if(!v)return;
+  closeMenus();
+  const me2=(typeof me!=='undefined'?me.nick:'Você'),ini=me2.slice(0,2).toUpperCase();
+  const u=document.createElement('div');u.className='msg-user';u.innerHTML='<div class="who"><span class="avatar sm">'+esc(ini)+'</span>'+esc(me2)+'<span class="sep">·</span>agora</div><div class="bubble" style="white-space:pre-wrap">'+esc(v)+'</div>';
+  $('#thread').appendChild(u); b.value=''; grow(); onMsg(); toBottom(true);
+  const r=replies[replyN++%replies.length](v); setBusy(true); stopReq=false;
+  const live=document.createElement('div');live.className='live';live.innerHTML='<span class="spin">✳</span><span class="verb">Pensando</span><span class="sep">·</span><span class="tok">0 tokens</span>';
+  $('#thread').appendChild(live); toBottom(true);
+  const verbs=['Pensando','Lendo o projeto','Conferindo','Costurando a resposta'];let k=0,tok=0;
+  const tick=setInterval(()=>{tok+=37+Math.floor(Math.random()*60);live.querySelector('.tok').textContent=tok.toLocaleString('pt-BR')+' tokens';if(++k%6===0)live.querySelector('.verb').textContent=verbs[(k/6)%verbs.length]},200);
+  await sleep(1300);
+  if(!stopReq){const tl=document.createElement('div');tl.className='tools';
+    tl.innerHTML='<button onclick="this.parentElement.toggleAttribute(\'open\')"><i data-lucide="chevron-right" class="chev ic-sm"></i>Executou '+r.tools.length+(r.tools.length>1?' ações':' ação')+'</button><ol>'+r.tools.map(x=>'<li><b>'+x[0]+'</b><code>'+esc(x[1])+'</code></li>').join('')+'</ol>';
+    live.before(tl);icons();toBottom()}
+  if(!stopReq&&r.agent){await sleep(700);const ac=document.createElement('div');ac.className='tools agent-call';
+    ac.innerHTML='<button onclick="this.parentElement.toggleAttribute(\'open\')"><span class="mini">'+symSvg+'</span><span>Acionou o <b>Chris</b><span class="sep">·</span>Auditoria</span><i data-lucide="chevron-right" class="chev ic-sm"></i></button><div class="drill"><div><div class="eyebrow">Pedido</div><p>'+esc(v)+'</p></div><div><div class="eyebrow">Resposta</div><p>Aprovado com ressalva: falta um teste para esse caso.</p></div></div>';
+    live.before(ac);icons();toBottom()}
+  if(!stopReq)await sleep(600);
+  const ai=document.createElement('div');ai.className='msg-ai';live.before(ai);
+  let full='';
+  for(const para of r.text){ if(stopReq)break; full+=(full?'\n\n':'')+'';
+    for(const w of para.split(/(\s+)/)){ if(stopReq)break; full+=w; {const bl=full.split('\n\n'),C='<span class="caret"></span>';ai.innerHTML=bl.map((x,i)=>{const last=i===bl.length-1;if(x.startsWith('## ')||x.startsWith('- ')){const h=mdLite(x);return last?h.replace(/<\/(h4|li)>(<\/ul>)?$/,C+'</$1>$2'):h}return '<p>'+esc(x)+(last?C:'')+'</p>'}).join('')} toBottom(); await sleep(28+Math.random()*40) } }
+  clearInterval(tick); live.remove();
+  ai.innerHTML=ai.innerHTML.replace('<span class="caret"></span>','')+(stopReq?'<div class="stopped">Interrompido por você.</div>':'')
+    +'<div class="foot"><span>'+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'<span class="sep">·</span>'+esc(model)+'<span class="sep">·</span>'+tok.toLocaleString('pt-BR')+' tokens</span><button class="icon-btn" aria-label="Copiar" title="Copiar" data-copy><i data-lucide="copy" class="ic-sm"></i></button></div>';
+  icons(); toBottom(); setBusy(false); $('#msgBox').focus();
 }
 /* ---------- arquivos: código e preview ---------- */
 const files={
@@ -1124,7 +1174,8 @@ document.addEventListener('click',e=>{
   const sw=t.closest('.switch'); if(sw){sw.setAttribute('aria-checked',String(sw.getAttribute('aria-checked')!=='true'));return}
   if(t.closest('#pfSave')){me.nick=$('#pfNick').value.trim()||'Rafael';paintMe();closeModal();return toast('Perfil salvo')}
   if(t.closest('#tidy')){layout();renderNodes();fit();return}
-  if(t.closest('#sendBtn')){const b=$('#msgBox'),v=b.value.trim();if(!v)return;const d=document.createElement('div');d.className='msg-user';d.innerHTML='<div class="who"><span class="avatar sm">'+esc(me.nick.slice(0,2).toUpperCase())+'</span>'+esc(me.nick)+'<span class="sep">·</span>agora</div><div class="bubble">'+esc(v)+'</div>';$('#thread').appendChild(d);b.value='';onMsg();$('.thread').scrollTop=$('.thread').scrollHeight;return}
+  if(t.closest('#sendBtn'))return sendMsg();
+  const cp=t.closest('[data-copy]'); if(cp){const txt=cp.closest('.msg-ai').innerText.replace(/\n[^\n]*tokens\s*$/,'');navigator.clipboard&&navigator.clipboard.writeText(txt).catch(()=>{});return toast('Resposta copiada')}
   if(t.closest('#modelBtn')){renderModelMenu();return showAbove($('#modelMenu'),t.closest('#modelBtn'))}
   const mo=t.closest('[data-model]'); if(mo){model=mo.dataset.model;modelLabel();return renderModelMenu()}
   const ef=t.closest('[data-effort]'); if(ef){effort=ef.dataset.effort;modelLabel();return renderModelMenu()}
@@ -1186,7 +1237,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{
   if(e.target.id==='projSearch')renderProjects();
   if(e.target.id==='convSearch')renderConvs();
-  if(e.target.id==='msgBox')onMsg();
+  if(e.target.id==='msgBox'){onMsg();grow()}
   const ed=e.target.closest('[data-edit]'); if(ed&&sel){const n=nodes.find(z=>z.id===sel);n[ed.dataset.edit]=ed.value;
     const el=$(`.node[data-id="${sel}"]`);el.style.setProperty('--area',`var(--area-${n.area})`);el.innerHTML=nodeHtml(n);drawEdges()}
 });
@@ -1196,7 +1247,7 @@ document.addEventListener('dragstart',e=>{const it=e.target.closest('.item[data-
 document.addEventListener('dragend',()=>{dragId=null;$$('.dragging,.drop').forEach(x=>x.classList.remove('dragging','drop'))});
 document.addEventListener('dragover',e=>{if(!dragId)return;const f=e.target.closest('.item.folder[data-id],[data-cwd]');$$('.drop').forEach(x=>x!==f&&x.classList.remove('drop'));if(f&&f.dataset.id!==dragId){e.preventDefault();f.classList.add('drop')}});
 document.addEventListener('drop',e=>{if(!dragId)return;const f=e.target.closest('.item.folder[data-id],[data-cwd]');if(!f)return;e.preventDefault();moveTo(dragId,f.dataset.id||f.dataset.cwd||null)});
-document.addEventListener('keydown',e=>{if(e.target.id==='chatTitle'&&(e.key==='Enter'||e.key==='Escape')){e.preventDefault();e.target.blur()}if(e.key==='Escape'){closeMenus();closeModal();$('#cfgPop').classList.remove('on')}if(e.ctrlKey&&e.key==="'"&&$('#chat').classList.contains('on')){e.preventDefault();toggleTerminal()}});
+document.addEventListener('keydown',e=>{if(e.target.id==='msgBox'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!$('#hintMenu').classList.contains('on')){e.preventDefault();sendMsg();return}if(e.key==='Escape'&&busy){stopReq=true}if(e.target.id==='chatTitle'&&(e.key==='Enter'||e.key==='Escape')){e.preventDefault();e.target.blur()}if(e.key==='Escape'){closeMenus();closeModal();$('#cfgPop').classList.remove('on')}if(e.ctrlKey&&e.key==="'"&&$('#chat').classList.contains('on')){e.preventDefault();toggleTerminal()}});
 addEventListener('resize',()=>{if($('#agentes').classList.contains('on'))fit()});
 
 /* nome do organograma (preferência local do protótipo) */
