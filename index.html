@@ -222,8 +222,9 @@ main{position:relative;overflow:hidden;background:var(--bg)}
 .agent-call[open] .drill{display:flex}
 .agent-call .drill p{margin-top:2px;color:var(--text-2)}
 [hidden]{display:none!important}
-.live{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-2)}
-.live .flowmark{width:22px;height:22px;flex:none;animation:breathe 1.8s ease-in-out infinite}
+.live{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-2);white-space:nowrap;overflow:hidden}
+.live .sec{font-variant-numeric:tabular-nums}
+.live .flowmark{width:18px;height:18px;flex:none;animation:breathe 1.8s ease-in-out infinite}
 .live .flowmark .ink{fill:var(--logo-ink)}
 .live .flowmark .river{animation:river 1.3s linear infinite;will-change:transform}
 @keyframes river{from{transform:translateX(0)}to{transform:translateX(450px)}}
@@ -233,8 +234,7 @@ main{position:relative;overflow:hidden;background:var(--bg)}
 @keyframes shim{from{background-position:120% 0}to{background-position:-120% 0}}
 .live .meta{display:flex;align-items:center;font-size:13px}
 @media (prefers-reduced-motion:reduce){.live .flowmark,.shimmer{animation:none}.shimmer{color:var(--text-2)}}
-@media (pointer:fine){.live .hint-stop{display:none}}
-@media (pointer:fine){.live .meta::after{content:"· Esc para parar";margin-left:.45em}}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 .caret::after{content:"";display:inline-block;width:8px;height:16px;margin-left:2px;vertical-align:-2px;background:var(--orange);border-radius:2px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
@@ -975,10 +975,10 @@ async function sendMsg(){
   const u=document.createElement('div');u.className='msg-user';u.innerHTML='<div class="who"><span class="avatar sm">'+esc(ini)+'</span>'+esc(me2)+'<span class="sep">·</span>agora</div><div class="bubble" style="white-space:pre-wrap">'+esc(v)+'</div>';
   $('#thread').appendChild(u); b.value=''; grow(); onMsg(); toBottom(true);
   const r=replies[replyN++%replies.length](v); setBusy(true); stopReq=false;
-  const live=document.createElement('div');live.className='live';live.innerHTML='<svg class="flowmark" viewBox="320 300 450 480" aria-hidden="true"><path class="ink" d="M528.1,421.61c27.19,70.5,98.53,113.3,173.52,103.68l51.61-6.24.05-70.92-58.17,7.02c-41.13,6.19-80.63-14.57-98.54-52.21l-47.93-103.74h-68.48L528.1,421.61Z"/><path class="ink" d="M561.7,658.39c-27.19-70.5-98.53-113.3-173.53-103.68l-51.61,6.24-.05,70.92,58.17-7.02c41.13-6.19,80.63,14.57,98.54,52.21l47.94,103.74h68.48L561.7,658.39Z"/><defs><clipPath id="riverClip"><path d="M753.23,622.7l.05-75.45-76.28-.2c-39.84-1.54-76.87-14.6-108.65-39.33-47.71-35.92-104.68-54.27-164.09-53.1l-67.7.13-.05,75.17,78.63.19c40.7,1.31,78.68,14.8,110.97,40.31,47.52,35.32,103.99,53.31,162.87,52.15L753.23,622.7Z"/></clipPath><linearGradient id="riverGrad" gradientUnits="userSpaceOnUse" x1="320" y1="0" x2="770" y2="0" spreadMethod="repeat"><stop offset="0" stop-color="#e84f03"/><stop offset=".35" stop-color="#e84f03"/><stop offset=".55" stop-color="#f2a57c"/><stop offset=".68" stop-color="#fbe9df"/><stop offset=".8" stop-color="#f2a57c"/><stop offset="1" stop-color="#e84f03"/></linearGradient></defs><g clip-path="url(#riverClip)"><rect class="river" x="-580" y="440" width="1800" height="220" fill="url(#riverGrad)"/></g></svg><span class="verb shimmer">Pensando</span><span class="meta"><span class="sec">0s</span><span class="sep">·</span><span class="tok">0 tokens</span><span class="hint-stop"><span class="sep">·</span>toque no quadrado para parar</span></span>';
+  const live=document.createElement('div');live.className='live';live.innerHTML='<svg class="flowmark" viewBox="320 300 450 480" aria-hidden="true"><path class="ink" d="M528.1,421.61c27.19,70.5,98.53,113.3,173.52,103.68l51.61-6.24.05-70.92-58.17,7.02c-41.13,6.19-80.63-14.57-98.54-52.21l-47.93-103.74h-68.48L528.1,421.61Z"/><path class="ink" d="M561.7,658.39c-27.19-70.5-98.53-113.3-173.53-103.68l-51.61,6.24-.05,70.92,58.17-7.02c41.13-6.19,80.63,14.57,98.54,52.21l47.94,103.74h68.48L561.7,658.39Z"/><defs><clipPath id="riverClip"><path d="M753.23,622.7l.05-75.45-76.28-.2c-39.84-1.54-76.87-14.6-108.65-39.33-47.71-35.92-104.68-54.27-164.09-53.1l-67.7.13-.05,75.17,78.63.19c40.7,1.31,78.68,14.8,110.97,40.31,47.52,35.32,103.99,53.31,162.87,52.15L753.23,622.7Z"/></clipPath><linearGradient id="riverGrad" gradientUnits="userSpaceOnUse" x1="320" y1="0" x2="770" y2="0" spreadMethod="repeat"><stop offset="0" stop-color="#e84f03"/><stop offset=".35" stop-color="#e84f03"/><stop offset=".55" stop-color="#f2a57c"/><stop offset=".68" stop-color="#fbe9df"/><stop offset=".8" stop-color="#f2a57c"/><stop offset="1" stop-color="#e84f03"/></linearGradient></defs><g clip-path="url(#riverClip)"><rect class="river" x="-580" y="440" width="1800" height="220" fill="url(#riverGrad)"/></g></svg><span class="verb shimmer">Pensando</span><span class="sec"><span class="sep">·</span>0s</span>';
   $('#thread').appendChild(live); toBottom(true);
   const verbs=['Pensando','Lendo o projeto','Conferindo','Costurando a resposta'];let k=0,tok=0;
-  const t0=Date.now();const tick=setInterval(()=>{tok+=37+Math.floor(Math.random()*60);live.querySelector('.tok').textContent=tok.toLocaleString('pt-BR')+' tokens';live.querySelector('.sec').textContent=Math.floor((Date.now()-t0)/1000)+'s';if(++k%8===0)live.querySelector('.verb').textContent=verbs[(k/8)%verbs.length]},200);
+  const t0=Date.now();const tick=setInterval(()=>{tok+=37+Math.floor(Math.random()*60);live.querySelector('.sec').innerHTML='<span class="sep">·</span>'+Math.floor((Date.now()-t0)/1000)+'s';if(++k%8===0)live.querySelector('.verb').textContent=verbs[(k/8)%verbs.length]},200);
   await sleep(1300);
   if(!stopReq){const tl=document.createElement('div');tl.className='tools';
     tl.innerHTML='<button onclick="this.parentElement.toggleAttribute(\'open\')"><i data-lucide="chevron-right" class="chev ic-sm"></i>Executou '+r.tools.length+(r.tools.length>1?' ações':' ação')+'</button><ol>'+r.tools.map(x=>'<li><b>'+x[0]+'</b><code>'+esc(x[1])+'</code></li>').join('')+'</ol>';
@@ -987,7 +987,7 @@ async function sendMsg(){
     ac.innerHTML='<button onclick="this.parentElement.toggleAttribute(\'open\')"><span class="mini">'+symSvg+'</span><span>Acionou o <b>Chris</b><span class="sep">·</span>Auditoria</span><i data-lucide="chevron-right" class="chev ic-sm"></i></button><div class="drill"><div><div class="eyebrow">Pedido</div><p>'+esc(v)+'</p></div><div><div class="eyebrow">Resposta</div><p>Aprovado com ressalva: falta um teste para esse caso.</p></div></div>';
     live.before(ac);icons();toBottom()}
   if(!stopReq)await sleep(600);
-  const ai=document.createElement('div');ai.className='msg-ai';live.before(ai);
+  const ai=document.createElement('div');ai.className='msg-ai';live.before(ai);live.style.display='none';
   let full='';
   for(const para of r.text){ if(stopReq)break; full+=(full?'\n\n':'')+'';
     for(const w of para.split(/(\s+)/)){ if(stopReq)break; full+=w; {const bl=full.split('\n\n'),C='<span class="caret"></span>';ai.innerHTML=bl.map((x,i)=>{const last=i===bl.length-1;if(x.startsWith('## ')||x.startsWith('- ')){const h=mdLite(x);return last?h.replace(/<\/(h4|li)>(<\/ul>)?$/,C+'</$1>$2'):h}return '<p>'+esc(x)+(last?C:'')+'</p>'}).join('')} toBottom(); await sleep(28+Math.random()*40) } }
