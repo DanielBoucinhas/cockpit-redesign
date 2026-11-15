@@ -506,9 +506,9 @@ h1{font-size:30px}
     <linearGradient id="flowLight" x1="331.62" y1="538.63" x2="748.38" y2="538.63" gradientUnits="userSpaceOnUse"><!-- derivado: mesmo gradiente, terminando em areia para não sumir no fundo claro -->
       <stop offset="0" stop-color="#e84f03"/><stop offset=".3" stop-color="#ec8a52"/><stop offset=".65" stop-color="#e9bfa3"/><stop offset="1" stop-color="#d8d6c9"/>
     </linearGradient>
-    <linearGradient id="flowAnim" x1="0" y1="0" x2="1" y2="0" spreadMethod="reflect">
-      <stop offset="0" stop-color="#e84f03"/><stop offset=".45" stop-color="#ec9d75"/><stop offset="1" stop-color="#f2e6de"/>
-      <animateTransform attributeName="gradientTransform" type="translate" values="-1 0;1 0" dur="1.6s" repeatCount="indefinite"/>
+    <linearGradient id="flowAnim" x1="0" y1="0" x2="1" y2="0" spreadMethod="repeat">
+      <stop offset="0" stop-color="#e84f03"/><stop offset=".3" stop-color="#ee8a55"/><stop offset=".5" stop-color="#f4dccd"/><stop offset=".7" stop-color="#ee8a55"/><stop offset="1" stop-color="#e84f03"/>
+      <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="1 0" dur="1.4s" repeatCount="indefinite" calcMode="linear"/>
     </linearGradient>
     <symbol id="sym" viewBox="320 300 450 480">
       <path style="fill:var(--logo-ink)" d="M528.1,421.61c27.19,70.5,98.53,113.3,173.52,103.68l51.61-6.24.05-70.92-58.17,7.02c-41.13,6.19-80.63-14.57-98.54-52.21l-47.93-103.74h-68.48L528.1,421.61Z"/>
